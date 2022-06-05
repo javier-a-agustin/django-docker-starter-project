@@ -5,20 +5,42 @@ services:
         image: postgres
         volumes:
             - ./data/db:/var/lib/postgresql/data
-        environment:
-            - POSTGRES_DB=app_db
-            - POSTGRES_USER=user_db
-            - POSTGRES_PASSWORD=password_db
+        env_file:
+            - ./env_variables/postgres.env
+        ports:
+            - 5432:5432
+        restart: unless-stopped
+        networks:
+            - starter-project
+    # mysql:
+    #     image: mysql:8.0
+    #     env_file:
+    #         - ./env_variables/mysql.env
+    #     volumes:
+    #         - ./mysql:/var/lib/mysql
+    #     restart: unless-stopped
+    #     networks:
+    #         - starter-project
     django:
         build:
             context: .
-            dockerfile: DockerfileDjango
+            dockerfile: dockerfiles/DockerfileDjango
         command: python manage.py runserver 0.0.0.0:8000
+        env_file:
+            - ./env_variables/django.env
         tty: true
         volumes:
             - ./app:/app
         ports:
-            - "8000:8000"
+            - 8000:8000
         depends_on:
             - postgres
-        restart: always
+            # - mysql
+        restart: unless-stopped
+        networks:
+            - starter-project
+
+networks:
+    starter-project:
+        external:
+            name: starter-project
